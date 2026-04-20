@@ -103,9 +103,16 @@ At inference, each patch is matched against the coreset via `torch.cdist`. The m
 
 | Category | Full Bank | Coreset | Reduction |
 |----------|----------:|--------:|----------:|
-| bottle | 240,768 | 24,077 | 10x |
-| carpet | 322,560 | 32,256 | 10x |
-| grid | 304,128 | 30,413 | 10x |
+| cable | 87,808 | 8,781 | 10x |
+| hazelnut | 153,272 | 15,328 | 10x |
+| leather | 96,040 | 9,604 | 10x |
+| metal_nut | 86,240 | 8,624 | 10x |
+| pill | 104,664 | 10,467 | 10x |
+| screw | 125,440 | 12,544 | 10x |
+| tile | 90,160 | 9,016 | 10x |
+| toothbrush | 23,520 | 2,352 | 10x |
+| wood | 96,824 | 9,683 | 10x |
+| zipper | 94,080 | 9,408 | 10x |
 
 10x smaller with negligible AUROC drop. The coreset keeps the full bank's coverage without the memory overhead.
 
