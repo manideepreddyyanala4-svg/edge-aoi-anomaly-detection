@@ -39,11 +39,11 @@ class Config:
 
     @property
     def baseline_bank_path(self) -> Path:
-        return self.memory_bank_dir / f"{self.category}_full_bank.pkl"
+        return self.memory_bank_dir / f"{self.category}_full_bank.pt"
 
     @property
     def coreset_bank_path(self) -> Path:
-        return self.memory_bank_dir / f"{self.category}_coreset_bank.pkl"
+        return self.memory_bank_dir / f"{self.category}_coreset_bank.pt"
 
     @property
     def threshold_path(self) -> Path:

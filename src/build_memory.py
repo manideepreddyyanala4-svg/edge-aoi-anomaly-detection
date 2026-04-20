@@ -274,7 +274,7 @@ def build_and_save_memory_banks(
 
 
 def load_memory_bank_metadata(path: Path) -> Dict[str, Any]:
-    return torch.load(path, map_location="cpu")
+    return torch.load(path, map_location="cpu", weights_only=True)
 
 
 if __name__ == "__main__":

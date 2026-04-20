@@ -133,6 +133,7 @@ class FeatureExtractor(nn.Module):
         if layer2.shape[-2:] != layer3.shape[-2:]:
             layer2 = F.adaptive_avg_pool2d(layer2, output_size=layer3.shape[-2:])
 
+        layer2 = layer2 * self.config.layer2_weight
         fused = torch.cat([layer2, layer3], dim=1)
 
         fused = F.normalize(fused, p=2, dim=1)

@@ -85,7 +85,7 @@ class AnomalyDetector:
                 f"Memory bank not found: {bank_path}. Run src/build_memory.py first."
             )
 
-        payload = torch.load(bank_path, map_location=self.device)
+        payload = torch.load(bank_path, map_location=self.device, weights_only=True)
         meta = payload.get("info", {})
         vectors = payload.get("vectors", None)
 

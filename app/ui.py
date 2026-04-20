@@ -92,11 +92,11 @@ if uploaded_file is not None:
 
     with col1:
         st.subheader("Original Image")
-        st.image(image_np, width="stretch")
+        st.image(image_np, use_container_width=True)
 
     with col2:
         st.subheader("Anomaly Heatmap Overlay")
-        st.image(overlay, width="stretch")
+        st.image(overlay, use_container_width=True)
 
     st.markdown("---")
     c1, c2, c3 = st.columns(3)
@@ -105,7 +105,7 @@ if uploaded_file is not None:
     c3.metric("Latency (ms)", f"{latency:.2f}")
 
     with st.expander("Show Raw Heatmap"):
-        st.image(apply_colormap(heatmap), width="stretch")
+        st.image(apply_colormap(heatmap), use_container_width=True)
 
 else:
     st.info("Upload an image to begin.")

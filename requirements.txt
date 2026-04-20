@@ -6,6 +6,5 @@ pillow
 scikit-learn
 scipy
 matplotlib
-faiss-cpu
 streamlit
 tqdm

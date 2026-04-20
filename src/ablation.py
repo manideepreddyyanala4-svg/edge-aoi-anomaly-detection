@@ -1,4 +1,4 @@
-from copy import deepcopy
+from dataclasses import replace
 from typing import Dict, Any, List
 
 from src.config import Config
@@ -35,13 +35,12 @@ def run_ablation(config: Config) -> List[Dict[str, Any]]:
     for exp in ablations:
         log(f"Running ablation: {exp['name']}")
 
-        cfg = deepcopy(config)
-
-        cfg.backbone = exp["backbone"]
-        cfg.use_coreset = exp["coreset"]
-
-        if "layer2_weight" in exp:
-            cfg.layer2_weight = exp["layer2_weight"]
+        cfg = replace(
+            config,
+            backbone=exp["backbone"],
+            use_coreset=exp["coreset"],
+            layer2_weight=exp.get("layer2_weight", config.layer2_weight),
+        )
 
         build_and_save_memory_banks(cfg)
 

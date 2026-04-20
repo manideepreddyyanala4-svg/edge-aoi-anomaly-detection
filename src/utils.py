@@ -18,14 +18,6 @@ def set_seed(seed: int = 42) -> None:
     torch.backends.cudnn.benchmark = False
 
 
-def get_device() -> torch.device:
-    """
-    Force CPU because current PyTorch does not support RTX 50xx (sm_120).
-    """
-    print("[WARNING] Forcing CPU mode due to CUDA incompatibility with RTX 50xx")
-    return torch.device("cpu")
-
-
 class Timer:
     def __init__(self):
         self.start_time = None
