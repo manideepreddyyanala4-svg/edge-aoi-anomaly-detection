@@ -68,9 +68,13 @@ Higher resolution doesn't always win. Results across 5 categories:
 | capsule | 0.9458 | 0.9597 | 0.9332 | 0.9307 |
 | transistor | 0.9996 | 0.9837 | 0.7878 | 0.7271 |
 
-- 384px helped grid most — pixel AUROC jumped from 0.9653 → 0.9894
-- 224px was more stable for transistor — pixel AUROC actually dropped at higher resolution
-- There's a real resolution-vs-texture tradeoff: fine textures benefit from 384px, object-level defects don't
+**Why 224px is the default across all 15 categories:**
+- 384px is not consistently better — transistor pixel AUROC *dropped* from 0.7878 → 0.7271 at higher resolution
+- 384px produces ~3x more patches per image, meaning ~3x slower inference and a ~3x larger memory bank
+- For most categories the accuracy gain is marginal (carpet: +0.007) — not worth the compute cost
+- This experiment was run specifically to validate 224px as the right default, not to guess it
+
+The resolution is configurable per category in `config.py`. For a production deployment on a texture-heavy category like grid, switching to 384px is a one-line change.
 
 ---
 
