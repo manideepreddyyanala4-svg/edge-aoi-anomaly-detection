@@ -27,11 +27,11 @@ The result is a system that generalizes to unseen defect types without ever trai
 
 | Category | Image AUROC | Pixel AUROC | F1 | Threshold |
 |----------|------------:|------------:|---:|----------:|
-| bottle | 1.0000 | 0.9542 | 1.0000 | 0.6505 |
+| bottle | 1.0000 | 0.9452 | 1.0000 | 0.6492 |
 | cable | 0.9983 | 0.9214 | 0.9840 | 0.7019 |
-| capsule | 0.9446 | 0.9321 | 0.9636 | 0.4484 |
-| carpet | 0.9960 | 0.9588 | 0.9834 | 0.6002 |
-| grid | 0.9699 | 0.9639 | 0.9643 | 0.5659 |
+| capsule | 0.9458 | 0.9332 | 0.9636 | 0.4484 |
+| carpet | 0.9952 | 0.9517 | 0.9778 | 0.6055 |
+| grid | 0.9616 | 0.9653 | 0.9558 | 0.5670 |
 | hazelnut | 1.0000 | 0.9504 | 1.0000 | 0.7932 |
 | leather | 1.0000 | 0.9864 | 1.0000 | 0.6544 |
 | metal_nut | 0.9995 | 0.9190 | 0.9947 | 0.6817 |
@@ -39,10 +39,10 @@ The result is a system that generalizes to unseen defect types without ever trai
 | screw | 0.8832 | 0.8890 | 0.9143 | 0.5676 |
 | tile | 0.9917 | 0.9189 | 0.9940 | 0.6999 |
 | toothbrush | 0.9889 | 0.9268 | 0.9677 | 0.6100 |
-| transistor | 0.9996 | 0.7702 | 0.9877 | 0.6932 |
+| transistor | 0.9996 | 0.7878 | 0.9877 | 0.6932 |
 | wood | 0.9816 | 0.9199 | 0.9587 | 0.7208 |
 | zipper | 0.9648 | 0.9272 | 0.9551 | 0.5015 |
-| **Mean** | **0.9919** | **0.9239** | **0.9814** | — |
+| **Mean** | **0.9781** | **0.9188** | **0.9738** | — |
 
 ---
 
@@ -52,15 +52,15 @@ To understand the effect of input resolution, I ran a separate experiment on 5 c
 
 | Category | Image AUROC 224px | Image AUROC 384px | Pixel AUROC 224px | Pixel AUROC 384px |
 |----------|------------------:|------------------:|------------------:|------------------:|
-| bottle | 1.0000 | 0.9992 | 0.9542 | 0.9648 |
-| carpet | 0.9960 | 0.9976 | 0.9588 | 0.9587 |
-| grid | 0.9699 | 0.9841 | 0.9639 | 0.9894 |
-| capsule | 0.9446 | 0.9597 | 0.9321 | 0.9307 |
-| transistor | 0.9996 | 0.9837 | 0.7702 | 0.7271 |
+| bottle | 1.0000 | 0.9992 | 0.9452 | 0.9648 |
+| carpet | 0.9952 | 0.9976 | 0.9517 | 0.9587 |
+| grid | 0.9616 | 0.9841 | 0.9653 | 0.9894 |
+| capsule | 0.9458 | 0.9597 | 0.9332 | 0.9307 |
+| transistor | 0.9996 | 0.9837 | 0.7878 | 0.7271 |
 
 **Key takeaways:**
-- 384px helped grid the most — pixel AUROC jumped from 0.9639 to 0.9894
-- 224px was more stable for transistor
+- 384px helped grid the most — pixel AUROC jumped from 0.9653 to 0.9894
+- 224px was more stable for transistor — pixel AUROC actually dropped at 384px
 - Bottle hit perfect image AUROC (1.0) at 224px
 - Higher resolution doesn't always win — there's a real tradeoff depending on texture type
 
@@ -103,7 +103,11 @@ At inference, each patch is matched against the coreset via `torch.cdist`. The m
 
 | Category | Full Bank | Coreset | Reduction |
 |----------|----------:|--------:|----------:|
+| bottle | 81,928 | 8,193 | 10x |
 | cable | 87,808 | 8,781 | 10x |
+| capsule | 85,848 | 8,585 | 10x |
+| carpet | 109,760 | 10,976 | 10x |
+| grid | 103,488 | 10,349 | 10x |
 | hazelnut | 153,272 | 15,328 | 10x |
 | leather | 96,040 | 9,604 | 10x |
 | metal_nut | 86,240 | 8,624 | 10x |
@@ -111,6 +115,7 @@ At inference, each patch is matched against the coreset via `torch.cdist`. The m
 | screw | 125,440 | 12,544 | 10x |
 | tile | 90,160 | 9,016 | 10x |
 | toothbrush | 23,520 | 2,352 | 10x |
+| transistor | 83,496 | 8,350 | 10x |
 | wood | 96,824 | 9,683 | 10x |
 | zipper | 94,080 | 9,408 | 10x |
 
@@ -175,7 +180,7 @@ data/mvtec/bottle/ground_truth/broken_large/
 # Single category
 python -m src.build_memory --category bottle
 
-# All 5 categories at once
+# All 15 categories at once
 python run_all.py
 ```
 
@@ -226,7 +231,7 @@ Compares ResNet18 vs WideResNet50, baseline vs coreset, layer3-only vs layer2+la
 
 [MVTec AD](https://www.mvtec.com/company/research/datasets/mvtec-ad) — Paul Bergmann et al., CVPR 2019.
 
-I used five categories: bottle, carpet, grid, capsule, transistor. These cover a good range of difficulty — from easy object-level defects (bottle) to hard texture-level ones (grid).
+I ran all 15 categories in the dataset. They cover a wide range of difficulty — from easy object-level defects (bottle, hazelnut) to hard texture-level ones (grid, screw) — which makes the benchmark a solid test of how well the approach actually generalizes.
 
 ---
 
