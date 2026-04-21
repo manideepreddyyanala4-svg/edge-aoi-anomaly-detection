@@ -4,18 +4,30 @@ A PatchCore-style anomaly detection system built for real manufacturing use case
 
 Built with PyTorch, WideResNet50, coreset memory banks, and a live Streamlit UI.
 
+**Mean Image AUROC: 0.9781 across all 15 MVTec categories.**
+
 ---
 
-## What this project does
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
+> Replace `YOUR_VIDEO_ID` with your actual YouTube video ID (the part after `?v=` in the URL).
+
+Upload any image → get an anomaly score + localization heatmap in under 100ms.
+
+---
+
+## How it works
 
 Most industrial anomaly detection research assumes you have labeled defect images. In practice, that's rarely true. Defects are rare, inconsistent, and expensive to annotate. Normal samples are easy to collect.
 
-This project takes that constraint seriously. The pipeline:
+This project takes that constraint seriously:
 
-1. Extracts patch-level features from normal training images using a pretrained WideResNet50
-2. Stores those features in a memory bank on disk
-3. At inference, compares each test image's patches against the memory bank using nearest-neighbor distance
-4. Assigns an anomaly score and generates a localization heatmap
+1. Extract patch-level features from normal training images using a pretrained WideResNet50
+2. Store those features in a coreset memory bank on disk (10x compressed)
+3. At inference, compare each test image's patches against the memory bank via nearest-neighbor distance
+4. Assign an anomaly score and generate a localization heatmap
 
 The result is a system that generalizes to unseen defect types without ever training on them.
 
@@ -44,11 +56,9 @@ The result is a system that generalizes to unseen defect types without ever trai
 | zipper | 0.9648 | 0.9272 | 0.9551 | 0.5015 |
 | **Mean** | **0.9781** | **0.9188** | **0.9738** | — |
 
----
+### Resolution Experiment — 224px vs 384px
 
-### Resolution Experiment — 224px vs 384px (5 categories)
-
-To understand the effect of input resolution, I ran a separate experiment on 5 categories at 384px.
+Higher resolution doesn't always win. Results across 5 categories:
 
 | Category | Image AUROC 224px | Image AUROC 384px | Pixel AUROC 224px | Pixel AUROC 384px |
 |----------|------------------:|------------------:|------------------:|------------------:|
@@ -58,34 +68,41 @@ To understand the effect of input resolution, I ran a separate experiment on 5 c
 | capsule | 0.9458 | 0.9597 | 0.9332 | 0.9307 |
 | transistor | 0.9996 | 0.9837 | 0.7878 | 0.7271 |
 
-**Key takeaways:**
-- 384px helped grid the most — pixel AUROC jumped from 0.9653 to 0.9894
-- 224px was more stable for transistor — pixel AUROC actually dropped at 384px
-- Bottle hit perfect image AUROC (1.0) at 224px
-- Higher resolution doesn't always win — there's a real tradeoff depending on texture type
+- 384px helped grid most — pixel AUROC jumped from 0.9653 → 0.9894
+- 224px was more stable for transistor — pixel AUROC actually dropped at higher resolution
+- There's a real resolution-vs-texture tradeoff: fine textures benefit from 384px, object-level defects don't
 
 ---
 
-## Demo
+## UI Examples
 
-### Broken Bottle — Correctly Detected
-
+### Bottle — Broken Glass (Object-Level Defect)
 ![Bottle UI](assets/screenshots/bottle_ui.png)
 
-The heatmap highlights the broken area with red/orange. The rest of the bottle scores low (blue). No defect labels were used to produce this.
+Anomaly score 1.0. The broken region lights up red/orange. The intact surface stays blue. Perfect separation with zero defect labels used during training.
 
-### Grid Example
+---
 
+### Carpet — Cut Defect (Texture-Level Defect)
+![Carpet UI](assets/screenshots/carpet_ui.png)
+
+Anomaly score 0.9366. The crack follows the exact path of the cut in the heatmap. Texture-level defects are harder — the whole surface looks similar — but the model still localizes the exact damage region.
+
+---
+
+### Grid — Bent Wires (Fine Texture)
 ![Grid UI](assets/screenshots/grid_ui.png)
 
-### Transistor Example
+Grid is one of the hardest categories in MVTec due to its repeating fine pattern. Pixel AUROC of 0.9653 at 224px, jumping to 0.9894 at 384px — resolution matters most here.
 
+---
+
+### Transistor — Component-Level Defect (Electronics)
 ![Transistor UI](assets/screenshots/transistor_ui.png)
 
-### 224 vs 384 Resolution Comparison
+Image AUROC of 0.9996 — near-perfect detection. The lower pixel AUROC (0.7878) reflects the challenge of localizing small anomalies on a densely packed PCB component.
 
-![224](assets/comparisons/comparison_224.png)
-![384](assets/comparisons/comparison_384.png)
+---
 
 ---
 
@@ -93,11 +110,11 @@ The heatmap highlights the broken area with red/orange. The rest of the bottle s
 
 ![Architecture](assets/screenshots/architecture.png)
 
-The backbone is WideResNet50_2 pretrained on ImageNet. Features are extracted from `layer2` and `layer3`, pooled to the same spatial resolution, concatenated, and L2-normalized. Each spatial location becomes a patch embedding.
+**Backbone:** WideResNet50_2 pretrained on ImageNet. Features extracted from `layer2` and `layer3`, pooled to the same spatial resolution, concatenated, and L2-normalized. Each spatial location becomes a patch embedding.
 
-At training time, all patch embeddings from normal images are collected into a memory bank. A greedy coreset algorithm then reduces the bank to ~10% of its original size while keeping the most representative vectors.
+**Training:** All patch embeddings from normal images are collected into a memory bank. A greedy coreset algorithm compresses it to ~10% of its original size while keeping the most representative vectors.
 
-At inference, each patch is matched against the coreset via `torch.cdist`. The max patch distance becomes the anomaly score. Patch scores are reshaped into a grid, upsampled to image resolution, and smoothed with a Gaussian kernel.
+**Inference:** Each patch is matched against the coreset via `torch.cdist`. The max patch distance becomes the anomaly score. Patch scores are reshaped into a grid, upsampled to image resolution, and smoothed with a Gaussian kernel.
 
 ### Memory Bank Compression
 
@@ -119,7 +136,7 @@ At inference, each patch is matched against the coreset via `torch.cdist`. The m
 | wood | 96,824 | 9,683 | 10x |
 | zipper | 94,080 | 9,408 | 10x |
 
-10x smaller with negligible AUROC drop. The coreset keeps the full bank's coverage without the memory overhead.
+10x smaller with negligible AUROC drop. The coreset keeps full coverage without the memory overhead.
 
 ---
 
@@ -141,89 +158,75 @@ edge_aoi/
 │   └── ablation.py        # Backbone / bank / feature ablations
 ├── app/
 │   └── ui.py              # Streamlit web UI
-├── run_all.py             # Run all 5 categories end-to-end
+├── run_all.py             # Run all 15 categories end-to-end
 └── requirements.txt
 ```
 
 ---
 
-## How to Run
+## Quick Start
 
-### 1. Clone the repo
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/manideepreddyyanala4-svg/edge-aoi-anomaly-detection.git
 cd edge-aoi-anomaly-detection
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Download the MVTec AD dataset
+### 2. Download MVTec AD dataset
 
 Get it from [mvtec.com/company/research/datasets/mvtec-ad](https://www.mvtec.com/company/research/datasets/mvtec-ad) and place it at:
 
 ```
-data/mvtec/bottle/train/good/
-data/mvtec/bottle/test/good/
-data/mvtec/bottle/test/broken_large/
-data/mvtec/bottle/ground_truth/broken_large/
-...
+data/mvtec/<category>/train/good/
+data/mvtec/<category>/test/<defect_type>/
+data/mvtec/<category>/ground_truth/<defect_type>/
 ```
 
-### 4. Build memory banks
+### 3. Build memory banks
 
 ```bash
 # Single category
 python -m src.build_memory --category bottle
 
-# All 15 categories at once
+# All 15 categories
 python run_all.py
 ```
 
-### 5. Evaluate
+### 4. Evaluate
 
 ```bash
 python -m src.evaluate --category bottle
 ```
 
-Outputs: Image AUROC, Pixel AUROC, F1, ROC/PR curve plots, false positive/negative examples, pixel-level CSV report.
+Outputs: Image AUROC, Pixel AUROC, F1, ROC/PR curves, false positive/negative examples, pixel-level CSV report.
 
-### 6. Launch the UI
+### 5. Launch the UI
 
 ```bash
 streamlit run app/ui.py
 ```
 
-Upload any image and get an anomaly score + heatmap in real time.
-
-### 7. Benchmark latency
+### 6. Benchmark and ablate
 
 ```bash
-python -m src.benchmark
+python -m src.benchmark   # latency per category
+python -m src.ablation    # ResNet18 vs WideResNet50, layer configs, bank sizes
 ```
-
-### 8. Run ablation study
-
-```bash
-python -m src.ablation
-```
-
-Compares ResNet18 vs WideResNet50, baseline vs coreset, layer3-only vs layer2+layer3.
 
 ---
 
 ## Tech Stack
 
-- **PyTorch** — feature extraction, coreset sampling, nearest-neighbor search
-- **TorchVision** — WideResNet50_2 pretrained backbone
-- **scikit-learn** — AUROC, AP, F1, threshold tuning
-- **OpenCV + Matplotlib** — heatmap rendering and visualization
-- **Streamlit** — live inspection UI
-- **Pandas** — dataset inspection and CSV reporting
+| Tool | Role |
+|------|------|
+| PyTorch | Feature extraction, coreset sampling, nearest-neighbor search |
+| TorchVision | WideResNet50_2 pretrained backbone |
+| scikit-learn | AUROC, AP, F1, threshold tuning |
+| OpenCV + Matplotlib | Heatmap rendering and visualization |
+| Streamlit | Live inspection UI |
+| Pandas | Dataset inspection and CSV reporting |
 
 ---
 
@@ -231,13 +234,13 @@ Compares ResNet18 vs WideResNet50, baseline vs coreset, layer3-only vs layer2+la
 
 [MVTec AD](https://www.mvtec.com/company/research/datasets/mvtec-ad) — Paul Bergmann et al., CVPR 2019.
 
-I ran all 15 categories in the dataset. They cover a wide range of difficulty — from easy object-level defects (bottle, hazelnut) to hard texture-level ones (grid, screw) — which makes the benchmark a solid test of how well the approach actually generalizes.
+15 categories covering a wide range of difficulty — from easy object-level defects (bottle, hazelnut) to hard texture-level ones (grid, screw) — which makes it a solid test of how well the approach actually generalizes.
 
 ---
 
 ## Why I built this
 
-I wanted to build something that solves a real problem, not just a toy demo. Unsupervised anomaly detection is one of the most practical problems in industrial computer vision — you almost never have defect labels in production. This project is my attempt at building a clean, reproducible implementation that actually works on a standard benchmark and can be tested visually.
+Unsupervised anomaly detection is one of the most practical problems in industrial computer vision — you almost never have defect labels in production. This project is my attempt at a clean, reproducible implementation that actually works on a standard benchmark and can be tested visually in real time.
 
 ---
 

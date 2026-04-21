@@ -16,7 +16,11 @@ from src.visualization import blend_heatmap_with_image, apply_colormap
 
 st.set_page_config(page_title="Edge AOI Anomaly Detection", layout="wide")
 
-CATEGORIES = ["bottle", "carpet", "grid", "capsule", "transistor"]
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid",
+    "hazelnut", "leather", "metal_nut", "pill", "screw",
+    "tile", "toothbrush", "transistor", "wood", "zipper",
+]
 
 
 @st.cache_resource(show_spinner=True)
