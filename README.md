@@ -12,9 +12,6 @@ Built with PyTorch, WideResNet50, coreset memory banks, and a live Streamlit UI.
 
 [![Watch the demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
-> Replace `YOUR_VIDEO_ID` with your actual YouTube video ID (the part after `?v=` in the URL).
-
-Upload any image → get an anomaly score + localization heatmap in under 100ms.
 
 ---
 
